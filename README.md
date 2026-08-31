@@ -73,18 +73,44 @@ estimates there are dominated by noise unless you use the full dataset.
 
 ## Results
 
-*(Fill from `results/` once runs complete. Report AUUC for each learner
-against the random-targeting control, the top- and bottom-decile observed
-uplift, and variance across seeds. If a learner fails to beat random, say
-so — that is a finding about the method on this data, not a failure of the
-project.)*
+`visit` outcome, 2M-row sample, 3 seeds (0-2), 70/30 train/test split.
+ATE on this sample was ~1.0-1.5% depending on seed. Values below are
+mean across the 3 seeds, with the seed-to-seed spread; raw JSON per
+learner per seed is in `results/`.
 
-| Learner | AUUC | vs random | Top decile | Bottom decile |
+| Learner | AUUC (mean ± std) | Beats random? | Top decile (mean) | Bottom decile (mean) |
 |---|---|---|---|---|
-| Random | | — | | |
-| S-learner | | | | |
-| T-learner | | | | |
-| X-learner | | | | |
+| Random | 28.8 ± 91.6 | control | +0.0117 | +0.0109 |
+| S-learner | 1937.4 ± 15.5 | Yes | +0.0579 | −0.0012 |
+| T-learner | 1694.3 ± 85.8 | Yes | +0.0564 | +0.0068 |
+| X-learner | 1709.8 ± 167.9 | Yes | +0.0570 | +0.0048 |
+
+Random targeting scores an AUUC of 28.8 with a standard deviation of 91.6 —
+indistinguishable from zero, which is what a metric built to be null under
+no signal should produce. All three meta-learners land between 1,600 and
+1,950, well outside that noise band. No ratio is quoted against random
+because dividing by a quantity consistent with zero produces a meaningless
+multiple.
+
+The S-learner posted
+the highest mean AUUC and was also the most stable across seeds (±15,
+versus ±86 for T and ±168 for X) — the opposite of this file's own
+prediction that boosting would ignore the treatment column and collapse to
+the average treatment effect. It did not: its predicted-uplift standard
+deviation (~0.023) is the same order of magnitude as T's and X's (~0.03),
+meaning it genuinely used the treatment feature to produce per-user
+heterogeneity rather than a single global shift. T and X, meanwhile,
+overlap enough in AUUC across seeds that neither is clearly ahead of the
+other here. The decile check confirms real ranking signal for all three
+learners: top-decile observed uplift (0.056-0.058) sits roughly an order
+of magnitude above bottom-decile uplift (0.005-0.007 for T and X), while
+random's own top and bottom deciles (0.0117 vs 0.0109) are statistically
+indistinguishable, exactly as expected when the ranking carries no
+information. The S-learner is the one case with a genuine sleeping-dogs
+signal: its bottom decile averages -0.0012 across seeds (negative in 2 of
+3), meaning the lowest-ranked ~10% of users show a small net negative
+response to the ad — worth flagging even though the effect is small and
+its sign flips in one of the three seeds.
 
 ## Data
 
